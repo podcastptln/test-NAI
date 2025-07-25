@@ -11,20 +11,16 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            /* Added Indonesian map silhouette background */
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZTFmNWY5IiBkPSJNMjU2IDBDMTE0LjYgMCAwIDExNC42IDAgMjU2czExNC42IDI1NiAyNTYgMjU2IDI1Ni0xMTQuNiAyNTYtMjU2UzM5Ny40IDAgMjU2IDB6bTAgNDY0Yy0xMTQuOSAwLTIwOC05My4xLTIwOC0yMDhTMTQxLjEgNDggMjU2IDQ4czIwOCA5My4xIDIwOCAyMDhTMzczLjEgNDY0IDI1NiA0NjR6TTM0OC43IDIzNC4yYy01LjMtMTcuMy0xOC44LTMxLjUtMzYuNC0zOS42LTUuMi0yLjQtMTAuOC00LjYtMTYuNC02LjctMTkuNC03LjItMzkuMy0xMC44LTYwLjItMTAuOC0yMC45IDAtNDAuOCAzLjYtNjAuMiAxMC44LTUuNiAyLjEtMTEuMiA0LjMtMTYuNCA2LjctMTcuNiA4LjEtMzEuMSAyMi4zLTM2LjQgMzkuNi01LjMgMTcuMy01LjMgMzYuNiAwIDUzLjkgNS4zIDE3LjMgMTguOCAzMS41IDM2LjQgMzkuNiA1LjIgMi40IDEwLjggNC42IDE2LjQgNi43IDE5LjQgNy4yIDM5LjMgMTAuOCA2MC4yIDEwLjggMjAuOSAwIDQwLjgtMy42IDYwLjItMTAuOCA1LjYtMi4xIDExLjItNC4zIDE2LjQtNi43IDE3LjYtOC4xIDMxLjEtMjIuMyAzNi40LTM5LjYgNS4zLTE3LjMgNS4zLTM2LjYgMC01My45eiIvPjwvc3ZnPg=='); /* Light blueish-gray map */
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain; /* Ensures the entire map is visible */
-            background-attachment: fixed; /* Keeps the background fixed when scrolling */
-            /* Add a semi-transparent overlay to ensure text readability */
-            background-color: rgba(248, 250, 252, 0.9); /* slate-50 with 90% opacity */
-            background-blend-mode: overlay; /* Blends the background color with the image */
+            background-color: #f8fafc; /* slate-50 */
         }
         .tab-btn.active { border-color: #0891b2; color: #0891b2; background-color: #ecfeff; }
         .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 350px; } }
         .required-dot::after { content: ' *'; color: #ef4444; }
+        .highlighted-aspect {
+            border-color: #ef4444; /* red-500 */
+            background-color: #fef2f2; /* red-50 */
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -67,8 +63,8 @@
                         status: 'Dalam Tinjauan', // Draf, Dalam Tinjauan, Disetujui, Ditolak
                         submissionDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
                         reviewers: [
-                            { name: 'Peninjau A', reviewed: true, decision: 'Setuju', comment: 'Analisa finansial sudah baik, mohon perjelas mitigasi risiko operasional.' }, 
-                            { name: 'Peninjau B', reviewed: false, decision: null, comment: null }
+                            { name: 'Peninjau A', reviewed: true, decision: 'Setuju', comment: 'Analisa finansial sudah baik, mohon perjelas mitigasi risiko operasional.', highlightedAspects: [] }, 
+                            { name: 'Peninjau B', reviewed: false, decision: null, comment: null, highlightedAspects: [] }
                         ],
                         data: { 
                             1: { 'EBITDA Margin': '15%', 'Net Profit Margin': '8%', 'ROE': '12', 'IRR': '14', 'WACC': '11', 'Current Ratio': '1.8', 'DSCR': '2.1' }, 
@@ -79,7 +75,8 @@
                             6: { 'content': 'Analisa hukum menunjukkan kepatuhan penuh terhadap UU PT dan peraturan internal. Risiko hukum utama adalah sengketa kontrak dengan pemasok baru, mitigasi dilakukan dengan klausul arbitrase yang kuat.' }, 
                             7: { 'content': 'Nilai Eksposur Risiko: Rp 10 Miliar. Biaya Mitigasi: Rp 1.5 Miliar.' }, 
                             8: { 'content': 'Tingkat kepatuhan terhadap kelengkapan dokumen 100%. Kepatuhan internal dinilai tinggi.' }, 
-                            9: { 'content': 'Proyek ini juga bertujuan untuk meningkatkan sentimen positif pemberitaan pasca isu lingkungan tahun lalu.' } 
+                            9: { 'content': 'Proyek ini juga bertujuan untuk meningkatkan sentimen positif pemberitaan pasca isu lingkungan tahun lalu.' },
+                            10: { 'raw_data_content': '' } // Initial empty raw data content
                         }
                     },
                     {
@@ -89,8 +86,8 @@
                         status: 'Disetujui',
                         submissionDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
                         reviewers: [
-                            { name: 'Peninjau A', reviewed: true, decision: 'Setuju', comment: 'Proposal yang sangat baik dan dibutuhkan.' }, 
-                            { name: 'Peninjau B', reviewed: true, decision: 'Setuju', comment: 'Setuju, ROI sangat menjanjikan.' }
+                            { name: 'Peninjau A', reviewed: true, decision: 'Setuju', comment: 'Proposal yang sangat baik dan dibutuhkan.', highlightedAspects: [] }, 
+                            { name: 'Peninjau B', reviewed: true, decision: 'Setuju', comment: 'Setuju, ROI sangat menjanjikan.', highlightedAspects: [] }
                         ],
                         data: { 
                             1: { 'ROE': '25', 'IRR': '20', 'WACC': '12', 'DSCR': 'N/A' }, 
@@ -101,7 +98,8 @@
                             6: { 'content': 'Kewenangan Direksi sesuai. Hubungan hukum dengan vendor SAP telah dianalisa.' }, 
                             7: { 'content': 'Risiko implementasi gagal. Mitigasi dengan menunjuk konsultan berpengalaman.' }, 
                             8: { 'content': 'Sesuai dengan GCG perusahaan.' }, 
-                            9: { 'content': 'Peningkatan kapabilitas SDM dalam teknologi.' } 
+                            9: { 'content': 'Peningkatan kapabilitas SDM dalam teknologi.' },
+                            10: { 'raw_data_content': 'Tanggal,Pendapatan,Beban,Laba Bersih\n2023-01-01,100000,50000,50000\n2023-02-01,120000,60000,60000' }
                         }
                     },
                     {
@@ -120,8 +118,8 @@
                         status: 'Ditolak',
                         submissionDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
                         reviewers: [
-                            { name: 'Peninjau A', reviewed: true, decision: 'Tolak', comment: 'Proyeksi NPV terlalu optimis dan tidak sejalan dengan WACC saat ini. Mohon kaji ulang asumsi.' }, 
-                            { name: 'Peninjau B', reviewed: true, decision: 'Tolak', comment: 'Setuju dengan Pak Budi. Analisa risiko pasar kurang mendalam.' }
+                            { name: 'Peninjau A', reviewed: true, decision: 'Tolak', comment: 'Proyeksi NPV terlalu optimis dan tidak sejalan dengan WACC saat ini. Mohon kaji ulang asumsi.', highlightedAspects: [1, 7] }, 
+                            { name: 'Peninjau B', reviewed: true, decision: 'Tolak', comment: 'Setuju dengan Pak Budi. Analisa risiko pasar kurang mendalam.', highlightedAspects: [7] }
                         ],
                         data: { 
                             1: { 'ROE': '8', 'IRR': '9', 'WACC': '10', 'DSCR': '1.1' }, 
@@ -132,11 +130,12 @@
                             6: { 'content': 'Risiko sengketa lahan belum dimitigasi.'}, 
                             7: { 'content': 'Risiko pasar kurang dianalisa.'}, 
                             8: { 'content': 'Kepatuhan terhadap GCG perlu diperjelas.'}, 
-                            9: { 'content': 'Tidak ada aspek lain.'} 
+                            9: { 'content': 'Tidak ada aspek lain.'},
+                            10: { 'raw_data_content': 'Tanggal,Aset,Liabilitas,Ekuitas\n2023-01-01,500000,200000,300000\n2023-02-01,550000,220000,330000' }
                         }
                     },
                 ],
-                activeView: 'login', // 'login', 'dashboard', 'form', 'review'
+                activeView: 'login', // 'login', 'dashboard', 'form', 'review', 'archive_approved', 'archive_rejected'
                 activeMemoId: null,
                 activeFormData: {},
                 activeTab: 1,
@@ -153,7 +152,7 @@
 
             // Constants
             const aspectTitles = {
-                1: 'Finansial / Bisnis',
+                1: 'Finansial / Bisnis (Ringkasan)',
                 2: 'Kepentingan / Objektivitas / Tujuan',
                 3: 'Lingkungan, Sosial, dan Ekonomi',
                 4: 'Fiskal',
@@ -161,7 +160,8 @@
                 6: 'Legal',
                 7: 'Manajemen Risiko',
                 8: 'Corporate Governance & Compliance',
-                9: 'Aspek Lainnya'
+                9: 'Aspek Lainnya',
+                10: 'Data Keuangan Mentah' // New 10th aspect
             };
 
             // --- MODAL FUNCTIONS ---
@@ -292,15 +292,24 @@
                     // Reviewers see all memos that are not drafts
                     memosForRole = appState.memos.filter(m => m.status !== 'Draf');
                 } else {
-                    // Proposers only see their own memos
-                    memosForRole = appState.memos.filter(m => m.proposer === appState.currentUserName);
+                    // Proposers only see their own memos that are not yet approved or rejected (i.e., drafts or in review)
+                    memosForRole = appState.memos.filter(m => 
+                        m.proposer === appState.currentUserName && 
+                        (m.status === 'Draf' || m.status === 'Dalam Tinjauan')
+                    );
                 }
 
                 let content = `
                     <div class="bg-white shadow-md rounded-lg p-6">
                         <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold">${isReviewer ? 'Daftar Nota untuk Ditinjau' : 'Dasbor Nota Anda'}</h2>
-                            ${!isReviewer ? '<button id="create-new-memo-btn" class="bg-cyan-600 text-white font-bold py-2 px-4 rounded-md hover:bg-cyan-700 mt-3 sm:mt-0">+ Buat Nota Baru</button>' : ''}
+                            ${!isReviewer ? `
+                                <div class="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0">
+                                    <button id="create-new-memo-btn" class="bg-cyan-600 text-white font-bold py-2 px-4 rounded-md hover:bg-cyan-700">+ Buat Nota Baru</button>
+                                    <button id="view-approved-archive-btn" class="bg-emerald-600 text-white font-bold py-2 px-4 rounded-md hover:bg-emerald-700">Arsip Disetujui</button>
+                                    <button id="view-rejected-archive-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700">Arsip Ditolak</button>
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-slate-200">
@@ -335,6 +344,57 @@
                 `;
                 mainContent.innerHTML = content;
             }
+
+            function renderArchivedMemos(archiveType) { // 'approved' or 'rejected'
+                appState.activeView = `archive_${archiveType}`;
+                const filteredMemos = appState.memos.filter(m => 
+                    m.proposer === appState.currentUserName && 
+                    (archiveType === 'approved' ? m.status === 'Disetujui' : m.status === 'Ditolak')
+                );
+
+                const title = archiveType === 'approved' ? 'Arsip Nota Disetujui' : 'Arsip Nota Ditolak';
+                const emptyMessage = archiveType === 'approved' ? 'Tidak ada nota yang disetujui di arsip.' : 'Tidak ada nota yang ditolak di arsip.';
+
+                let content = `
+                    <div class="bg-white shadow-md rounded-lg p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold">${title}</h2>
+                            <button id="back-to-dashboard-btn" class="text-sm text-cyan-600 hover:text-cyan-800 font-medium">← Kembali ke Dasbor</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Judul Proyek</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Pengusul</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal Pengajuan</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">Aksi</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    ${filteredMemos.map(memo => `
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${memo.title}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${memo.proposer}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${memo.submissionDate ? new Date(memo.submissionDate).toLocaleDateString('id-ID') : '-'}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(memo.status)}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button class="view-memo-btn text-cyan-600 hover:text-cyan-900" data-id="${memo.id}">
+                                                    Lihat
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                    ${filteredMemos.length === 0 ? `<tr><td colspan="5" class="text-center py-10 text-slate-500">${emptyMessage}</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                mainContent.innerHTML = content;
+            }
+
 
             function renderForm(memoId = null) {
                 appState.activeView = 'form';
@@ -422,6 +482,24 @@
                 document.body.removeChild(link);
             }
 
+            function handleDownloadRawDataTemplate(event) {
+                event.preventDefault();
+                const csvContent = "data:text/csv;charset=utf-8," 
+                    + "Tanggal,Pendapatan,Beban,Laba Bersih\n"
+                    + "2023-01-01,100000,50000,50000\n"
+                    + "2023-02-01,120000,60000,60000\n"
+                    + "2023-03-01,110000,55000,55000\n";
+                
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "templat_data_keuangan_mentah.csv");
+                document.body.appendChild(link); // Required for FF
+                link.click();
+                document.body.removeChild(link);
+            }
+
+
             function renderFormTabContent() {
                 const contentContainer = document.getElementById('form-content');
                 const data = appState.activeFormData[appState.activeTab] || {};
@@ -447,7 +525,25 @@
                             </div>
                         </div>
                     `;
-                } else {
+                } else if (appState.activeTab === 10) { // New tab for raw financial data
+                    contentHtml = `
+                        <h3 class="text-lg font-semibold mb-2 required-dot">${aspectTitles[10]}</h3>
+                        <p class="text-sm text-slate-500 mb-4">Unggah file CSV yang berisi data keuangan mentah (misalnya, laporan laba rugi, neraca). Pastikan format sesuai dengan templat.</p>
+                        <input type="file" id="raw-data-upload" accept=".csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"/>
+                        <div class="mt-2">
+                           <a href="#" id="download-raw-data-template" class="text-sm text-cyan-600 hover:underline">Unduh Templat Data Keuangan Mentah</a>
+                        </div>
+                        <div id="raw-data-preview" class="mt-4 p-4 border rounded-md bg-slate-50 ${data.raw_data_content ? '' : 'hidden'}">
+                            <h4 class="font-semibold mb-2">Pratinjau Data Keuangan Mentah</h4>
+                            <div class="overflow-x-auto">
+                                <table id="raw-data-table" class="min-w-full text-sm">
+                                    <!-- Raw data table content will be injected here -->
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+                else {
                     contentHtml = `
                         <h3 class="text-lg font-semibold mb-2 required-dot">${aspectTitles[appState.activeTab]}</h3>
                         <p class="text-sm text-slate-500 mb-4">Isi penjelasan singkat sesuai dengan penjelasan pada kajian / lampiran.</p>
@@ -455,6 +551,11 @@
                     `;
                 }
                 contentContainer.innerHTML = contentHtml;
+
+                // If on raw data tab and data exists, render the table
+                if (appState.activeTab === 10 && data.raw_data_content) {
+                    renderRawDataTable(data.raw_data_content);
+                }
             }
             
             function handleCsvUpload(event) {
@@ -485,14 +586,76 @@
                 });
             }
 
+            function handleRawDataUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const rawContent = e.target.result;
+                    appState.activeFormData[10] = { raw_data_content: rawContent };
+                    renderFormTabContent(); // Re-render to show preview
+                    checkFormCompleteness();
+                };
+                reader.readAsText(file);
+            }
+
+            function renderRawDataTable(csvString) {
+                Papa.parse(csvString, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        const tableContainer = document.getElementById('raw-data-table');
+                        if (!tableContainer) return;
+
+                        let tableHtml = '';
+                        if (results.data.length > 0) {
+                            // Table Header
+                            tableHtml += `<thead class="bg-slate-200"><tr>`;
+                            results.meta.fields.forEach(field => {
+                                tableHtml += `<th class="px-2 py-1 text-left">${field}</th>`;
+                            });
+                            tableHtml += `</tr></thead><tbody>`;
+
+                            // Table Body
+                            results.data.forEach(row => {
+                                tableHtml += `<tr class="border-t border-slate-100">`;
+                                results.meta.fields.forEach(field => {
+                                    tableHtml += `<td class="px-2 py-1">${row[field]}</td>`;
+                                });
+                                tableHtml += `</tr>`;
+                            });
+                            tableHtml += `</tbody>`;
+                        } else {
+                            tableHtml = `<p class="text-sm text-slate-500">Tidak ada data untuk ditampilkan.</p>`;
+                        }
+                        tableContainer.innerHTML = tableHtml;
+                    }
+                });
+            }
+
+
             function checkFormCompleteness() {
                 const submitBtn = document.getElementById('submit-memo-btn');
                 if (!submitBtn) return;
                 
                 let isComplete = true;
-                for (let i = 1; i <= 9; i++) {
+                // Check all 10 aspects
+                for (let i = 1; i <= 10; i++) {
                     const data = appState.activeFormData[i];
-                    if (!data || (i === 1 && Object.keys(data).length === 0) || (i > 1 && (!data.content || data.content.trim() === ''))) {
+                    if (!data) {
+                        isComplete = false;
+                        break;
+                    }
+                    if (i === 1 && Object.keys(data).length === 0) { // Financial summary
+                        isComplete = false;
+                        break;
+                    }
+                    if (i === 10 && (!data.raw_data_content || data.raw_data_content.trim() === '')) { // Raw financial data
+                        isComplete = false;
+                        break;
+                    }
+                    if (i > 1 && i < 10 && (!data.content || data.content.trim() === '')) { // Other text aspects
                         isComplete = false;
                         break;
                     }
@@ -545,6 +708,16 @@
                 const pendingReviewers = memo.reviewers.filter(r => !r.reviewed).length;
                 const rejectedReviewers = memo.reviewers.filter(r => r.decision === 'Tolak').length;
 
+                // Get highlighted aspects for this memo if it's rejected
+                const rejectedByReviewers = memo.reviewers.filter(r => r.decision === 'Tolak');
+                const allHighlightedAspects = new Set();
+                rejectedByReviewers.forEach(r => {
+                    if (r.highlightedAspects) {
+                        r.highlightedAspects.forEach(aspectId => allHighlightedAspects.add(aspectId));
+                    }
+                });
+
+
                 let content = `
                     <div class="bg-white shadow-md rounded-lg p-6">
                         <div class="flex justify-between items-start mb-6">
@@ -577,11 +750,14 @@
 
                         <div class="space-y-8">
                             ${Object.keys(aspectTitles).map(key => {
-                                const data = memo.data[key] || {};
+                                const aspectId = parseInt(key);
+                                const data = memo.data[aspectId] || {};
                                 let aspectContentHtml = '';
+                                const isHighlighted = allHighlightedAspects.has(aspectId) && memo.status === 'Ditolak';
+                                const highlightClass = isHighlighted ? 'highlighted-aspect' : '';
 
-                                if (parseInt(key) === 1) {
-                                    // Financial Data
+                                if (aspectId === 1) {
+                                    // Financial Data Summary
                                     const financialEntries = Object.entries(data);
                                     if (financialEntries.length > 0) {
                                         const roe = parseFloat(data['ROE']);
@@ -611,15 +787,60 @@
                                     } else {
                                         aspectContentHtml = '<p class="text-sm text-slate-500">Tidak ada data finansial yang diunggah.</p>';
                                     }
-                                } else {
+                                } else if (aspectId === 10) {
+                                    // Raw Financial Data
+                                    if (data.raw_data_content) {
+                                        let rawDataTableHtml = '';
+                                        Papa.parse(data.raw_data_content, {
+                                            header: true,
+                                            skipEmptyLines: true,
+                                            complete: function(results) {
+                                                if (results.data.length > 0) {
+                                                    rawDataTableHtml += `<div class="overflow-x-auto"><table class="min-w-full text-sm border border-slate-200 rounded-md">`;
+                                                    // Table Header
+                                                    rawDataTableHtml += `<thead class="bg-slate-50"><tr>`;
+                                                    results.meta.fields.forEach(field => {
+                                                        rawDataTableHtml += `<th class="px-2 py-1 text-left">${field}</th>`;
+                                                    });
+                                                    rawDataTableHtml += `</tr></thead><tbody>`;
+
+                                                    // Table Body
+                                                    results.data.forEach(row => {
+                                                        rawDataTableHtml += `<tr class="border-t border-slate-100">`;
+                                                        results.meta.fields.forEach(field => {
+                                                            rawDataTableHtml += `<td class="px-2 py-1">${row[field]}</td>`;
+                                                        });
+                                                        rawDataTableHtml += `</tr>`;
+                                                    });
+                                                    rawDataTableHtml += `</tbody></table></div>`;
+                                                } else {
+                                                    rawDataTableHtml = `<p class="text-sm text-slate-500">Tidak ada data mentah untuk ditampilkan.</p>`;
+                                                }
+                                            },
+                                            error: function(error) {
+                                                rawDataTableHtml = `<p class="text-red-500 text-sm">Gagal memuat data mentah: ${error.message}</p>`;
+                                            }
+                                        });
+                                        aspectContentHtml = `<h4 class="font-semibold mb-2">Detail Data Keuangan Mentah</h4>${rawDataTableHtml}`;
+                                    } else {
+                                        aspectContentHtml = '<p class="text-sm text-slate-500">Tidak ada data keuangan mentah yang diunggah.</p>';
+                                    }
+                                }
+                                else {
                                     // General content for other aspects
                                     aspectContentHtml = `<div class="text-slate-700 leading-relaxed">${data.content ? data.content.replace(/\n/g, '<br>') : '<p class="text-sm text-slate-500">Tidak ada penjelasan tersedia untuk aspek ini.</p>'}</div>`;
                                 }
 
                                 return `
-                                    <div class="border border-slate-200 rounded-md p-4">
-                                        <h3 class="text-lg font-semibold text-cyan-700 border-b-2 border-cyan-100 pb-2 mb-3">${key}. ${aspectTitles[key]}</h3>
+                                    <div class="border border-slate-200 rounded-md p-4 ${highlightClass}">
+                                        <h3 class="text-lg font-semibold text-cyan-700 border-b-2 border-cyan-100 pb-2 mb-3">${aspectId}. ${aspectTitles[aspectId]}</h3>
                                         ${aspectContentHtml}
+                                        ${appState.currentUserRole === 'reviewer' && memo.status === 'Dalam Tinjauan' ? `
+                                            <div class="mt-4 flex items-center">
+                                                <input type="checkbox" id="highlight-aspect-${aspectId}" data-aspect-id="${aspectId}" class="highlight-checkbox rounded text-red-600 focus:ring-red-500" ${memo.reviewers.find(r => r.name === appState.currentUserName)?.highlightedAspects?.includes(aspectId) ? 'checked' : ''}>
+                                                <label for="highlight-aspect-${aspectId}" class="ml-2 text-sm text-slate-700">Tandai untuk Perbaikan / Ditolak</label>
+                                            </div>
+                                        ` : ''}
                                     </div>
                                 `;
                             }).join('')}
@@ -655,6 +876,9 @@
                                         <li class="bg-slate-50 p-3 rounded-md border border-slate-200">
                                             <p class="font-medium text-slate-800">${reviewer.name} - ${reviewer.decision ? getStatusBadge(reviewer.decision === 'Setuju' ? 'Disetujui' : (reviewer.decision === 'Tolak' ? 'Ditolak' : 'Dalam Tinjauan')) : getStatusBadge('Draf')}</p>
                                             <p class="text-sm text-slate-600 mt-1">${reviewer.comment || 'Tidak ada komentar.'}</p>
+                                            ${reviewer.highlightedAspects && reviewer.highlightedAspects.length > 0 ? `
+                                                <p class="text-xs text-red-600 mt-1">Aspek yang ditandai: ${reviewer.highlightedAspects.map(id => aspectTitles[id]).join(', ')}</p>
+                                            ` : ''}
                                         </li>
                                     `).join('')}
                                 </ul>
@@ -749,6 +973,12 @@
                         case 'review':
                             renderReviewView(appState.activeMemoId);
                             break;
+                        case 'archive_approved':
+                            renderArchivedMemos('approved');
+                            break;
+                        case 'archive_rejected':
+                            renderArchivedMemos('rejected');
+                            break;
                         default:
                             renderDashboard(); // Default to dashboard if authenticated
                     }
@@ -764,7 +994,12 @@
                     renderDashboard();
                 } else if (event.target.id === 'create-new-memo-btn') {
                     renderForm();
-                } else if (event.target.classList.contains('view-memo-btn')) {
+                } else if (event.target.id === 'view-approved-archive-btn') {
+                    renderArchivedMemos('approved');
+                } else if (event.target.id === 'view-rejected-archive-btn') {
+                    renderArchivedMemos('rejected');
+                }
+                else if (event.target.classList.contains('view-memo-btn')) {
                     const memoId = parseInt(event.target.dataset.id);
                     const memo = appState.memos.find(m => m.id === memoId);
                     if (appState.currentUserRole === 'proposer' && memo.status === 'Draf') {
@@ -780,12 +1015,36 @@
                     handleSaveReview();
                 } else if (event.target.id === 'download-csv-template') {
                     handleDownloadTemplate(event);
+                } else if (event.target.id === 'download-raw-data-template') {
+                    handleDownloadRawDataTemplate(event);
                 }
             });
 
             mainContent.addEventListener('change', (event) => {
                 if (event.target.id === 'csv-upload') {
                     handleCsvUpload(event);
+                } else if (event.target.id === 'raw-data-upload') {
+                    handleRawDataUpload(event);
+                } else if (event.target.classList.contains('highlight-checkbox')) {
+                    const aspectId = parseInt(event.target.dataset.aspectId);
+                    const memo = appState.memos.find(m => m.id === appState.activeMemoId);
+                    let currentReviewer = memo.reviewers.find(r => r.name === appState.currentUserName);
+                    if (!currentReviewer) {
+                        currentReviewer = { name: appState.currentUserName, reviewed: false, decision: null, comment: null, highlightedAspects: [] };
+                        memo.reviewers.push(currentReviewer);
+                    }
+
+                    if (!currentReviewer.highlightedAspects) {
+                        currentReviewer.highlightedAspects = [];
+                    }
+
+                    if (event.target.checked) {
+                        if (!currentReviewer.highlightedAspects.includes(aspectId)) {
+                            currentReviewer.highlightedAspects.push(aspectId);
+                        }
+                    } else {
+                        currentReviewer.highlightedAspects = currentReviewer.highlightedAspects.filter(id => id !== aspectId);
+                    }
                 }
             });
 
@@ -836,8 +1095,8 @@
                     // Assign initial reviewers if not already assigned
                     if (memo.reviewers.length === 0) {
                         memo.reviewers = [
-                            { name: 'Peninjau A', reviewed: false, decision: null, comment: null },
-                            { name: 'Peninjau B', reviewed: false, decision: null, comment: null }
+                            { name: 'Peninjau A', reviewed: false, decision: null, comment: null, highlightedAspects: [] },
+                            { name: 'Peninjau B', reviewed: false, decision: null, comment: null, highlightedAspects: [] }
                         ];
                     }
                     
@@ -860,9 +1119,7 @@
 
                 let currentReviewer = memo.reviewers.find(r => r.name === appState.currentUserName);
                 if (!currentReviewer) {
-                    // This case should ideally not happen if reviewers are pre-assigned,
-                    // but adding a fallback to prevent errors.
-                    currentReviewer = { name: appState.currentUserName, reviewed: false, decision: null, comment: null };
+                    currentReviewer = { name: appState.currentUserName, reviewed: false, decision: null, comment: null, highlightedAspects: [] };
                     memo.reviewers.push(currentReviewer);
                 }
 
